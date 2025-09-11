@@ -21,7 +21,6 @@ export async function POST() {
         password: DEMO_PASSWORD,
         gotrue_meta_security: {},
       }),
-      cache: "no-store",
     },
   );
 

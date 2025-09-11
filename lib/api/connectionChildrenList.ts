@@ -1,23 +1,28 @@
 import { ConnItem } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { connChildrenKey } from "@/lib/keys";
 import { apiFetch } from "@/lib/helpers/apiFetch";
 
 async function listConnChildren(
   connectionId: string,
-  resourceId?: string | null,
-): Promise<{ data: ConnItem[] }> {
-  const searchParams = resourceId
-    ? `?resource_id=${encodeURIComponent(resourceId)}`
-    : "";
+  resourceId?: string,
+  cursor?: string,
+): Promise<{ data: ConnItem[]; nextCursor?: string }> {
+  const searchParams = new URLSearchParams();
 
-  const res = await apiFetch(
-    `connections/${connectionId}/children${searchParams}`,
+  if (resourceId) searchParams.set("resource_id", resourceId);
+  if (cursor) searchParams.set("cursor", cursor);
+
+  const response = await apiFetch(
+    `connections/${connectionId}/children?${searchParams.toString()}`,
   );
 
-  if (!res.ok) throw new Error("Failed to list children");
+  const json = await response.json()
 
-  return res.json();
+  return {
+    data: json.data,
+    nextCursor: json.nextCursor,
+  };
 }
 
 export function useConnChildrenListing(params: {
@@ -26,13 +31,17 @@ export function useConnChildrenListing(params: {
 }) {
   const { connId, resourceId } = params;
 
-  return useQuery({
+  const query = useInfiniteQuery({
     queryKey: connChildrenKey(connId, resourceId),
-    queryFn: async () => {
-      const response = await listConnChildren(connId, resourceId);
-
-      return response.data;
-    },
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) =>
+      listConnChildren(connId, resourceId, pageParam),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: 60_000,
   });
+
+  return {
+    ...query,
+    data: query.data?.pages.flatMap((page) => page.data),
+  };
 }

@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const resourceId = req.nextUrl.searchParams.get("resource_id");
   const searchParams = resourceId
-    ? `?resource_ids=${encodeURIComponent(resourceId)}`
+    ? `?resource_id=${encodeURIComponent(resourceId)}`
     : "";
 
   const res = await stackAiFetch(

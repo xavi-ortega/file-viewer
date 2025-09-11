@@ -15,10 +15,3 @@ export enum ItemStatus {
 export type KBItem = ConnItem & {
   status?: ItemStatus.PENDING | ItemStatus.INDEXED;
 };
-
-export type Item = {
-  resourceId: string;
-  iNodeType: string;
-  iNodePath: string;
-  status: ItemStatus;
-};

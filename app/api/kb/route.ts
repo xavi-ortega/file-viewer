@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
   const json = await res.json();
 
-  const knowledgeBaseId = json.knowledgeBaseId;
+  const knowledgeBaseId = json.knowledge_base_id;
 
   void setKbId(knowledgeBaseId);
 

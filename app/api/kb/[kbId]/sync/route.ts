@@ -11,6 +11,7 @@ export async function POST(
     `/knowledge_bases/sync/trigger/${params.kbId}/${body.orgId}`,
   );
 
+
   const text = await res.text();
 
   return NextResponse.json({ ok: true, raw: text });
