@@ -1,10 +1,11 @@
+import { apiFetch } from "@/lib/helpers/apiFetch";
+
 export async function createKnowledgeBase(
   connectionId: string,
   connectionSourceIds: string[],
 ) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/kb`, {
+  const response = await apiFetch("kb", {
     method: "POST",
-    cache: "no-store",
     body: JSON.stringify({
       connectionId,
       connectionSourceIds,

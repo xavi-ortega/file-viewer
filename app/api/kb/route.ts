@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stackAiFetch } from "@/lib/helpers/stackAi";
+import { stackAiFetch } from "@/lib/helpers/stackAiFetch";
 import { setKbId } from "@/lib/helpers/cookies";
 
 export async function POST(req: Request) {

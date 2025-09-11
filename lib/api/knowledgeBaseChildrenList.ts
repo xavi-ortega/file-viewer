@@ -1,6 +1,7 @@
 import { KBItem } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { kbChildrenKey } from "@/lib/keys";
+import { apiFetch } from "@/lib/helpers/apiFetch";
 
 async function listKbChildren(
   kbId: string,
@@ -12,12 +13,7 @@ async function listKbChildren(
     ? `?resource_path=${encodeURIComponent(resourcePath)}`
     : "";
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/kb/${kbId}/children${searchParams}`,
-    {
-      cache: "no-store",
-    },
-  );
+  const res = await apiFetch(`kb/${kbId}/children${searchParams}`);
 
   if (!res.ok) throw new Error("Failed to list KB children");
 

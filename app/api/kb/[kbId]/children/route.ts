@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stackAiFetch } from "@/lib/helpers/stackAi";
+import { stackAiFetch } from "@/lib/helpers/stackAiFetch";
 
 export async function GET(
   req: NextRequest,

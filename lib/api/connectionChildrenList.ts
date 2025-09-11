@@ -1,6 +1,7 @@
 import { ConnItem } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { connChildrenKey } from "@/lib/keys";
+import { apiFetch } from "@/lib/helpers/apiFetch";
 
 async function listConnChildren(
   connectionId: string,
@@ -10,9 +11,8 @@ async function listConnChildren(
     ? `?resource_id=${encodeURIComponent(resourceId)}`
     : "";
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/connections/${connectionId}/children${searchParams}`,
-    { cache: "no-store" },
+  const res = await apiFetch(
+    `connections/${connectionId}/children${searchParams}`,
   );
 
   if (!res.ok) throw new Error("Failed to list children");

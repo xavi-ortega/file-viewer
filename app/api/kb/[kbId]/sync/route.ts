@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stackAiFetch } from "@/lib/helpers/stackAi";
+import { stackAiFetch } from "@/lib/helpers/stackAiFetch";
 
 export async function POST(
   req: Request,
