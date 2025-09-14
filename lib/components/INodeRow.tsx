@@ -1,4 +1,4 @@
-import { ItemStatus } from "@/lib/types";
+import { ItemStatus, OptimisticItemStatus } from "@/lib/types";
 import { ChevronDown, ChevronRight, FileText, Folder } from "lucide-react";
 import { StatusBadge } from "@/lib/components/StatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,7 +10,7 @@ type INodeRowProps = {
   depth: number;
   isFolder: boolean;
   name: string;
-  status?: ItemStatus;
+  status?: ItemStatus | OptimisticItemStatus;
   expanded?: boolean;
   onToggle?: () => void;
   isRoot?: boolean;

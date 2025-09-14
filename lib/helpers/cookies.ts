@@ -16,13 +16,15 @@ export async function getSessionToken() {
   if (!token) {
     const response = await login();
 
+    void setSessionToken(response.token);
+
     return response.token;
   }
 
   return token;
 }
 
-export async function setSessionToken(token: string) {
+async function setSessionToken(token: string) {
   await setCookie("stack_session", token);
 }
 

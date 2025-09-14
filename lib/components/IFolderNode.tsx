@@ -12,7 +12,14 @@ type IFolderNodeProps = {
 };
 
 export const IFolderNode = (props: IFolderNodeProps) => {
-  const { depth, label, connId, resourceId, resourcePath, isRoot } = props;
+  const {
+    depth,
+    label,
+    connId,
+    resourceId,
+    resourcePath,
+    isRoot = false,
+  } = props;
 
   const [expanded, setExpanded] = useState(isRoot);
 
@@ -29,14 +36,13 @@ export const IFolderNode = (props: IFolderNodeProps) => {
         isRoot={isRoot}
       />
 
-      {expanded ? (
-        <VirtualizedChildren
-          depth={depth}
-          connId={connId}
-          folderId={resourceId}
-          folderPath={resourcePath}
-        />
-      ) : null}
+      <VirtualizedChildren
+        display={expanded}
+        depth={depth}
+        connId={connId}
+        folderId={resourceId}
+        folderPath={resourcePath}
+      />
     </>
   );
 };

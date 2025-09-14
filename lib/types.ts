@@ -1,4 +1,4 @@
-export type INodeType = "directory" | "file";
+type INodeType = "directory" | "file";
 
 export type ConnItem = {
   resource_id: string;

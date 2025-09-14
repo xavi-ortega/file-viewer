@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { setSessionToken } from "@/lib/helpers/cookies";
 
 export async function POST() {
   const { STACK_SUPABASE_ANON_KEY, DEMO_USER, DEMO_PASSWORD } = process.env;
@@ -26,9 +25,5 @@ export async function POST() {
 
   const json = await res.json();
 
-  const token = json.access_token;
-
-  void setSessionToken(token);
-
-  return NextResponse.json({ token });
+  return NextResponse.json({ token: json.access_token });
 }

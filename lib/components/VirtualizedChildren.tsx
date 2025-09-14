@@ -10,6 +10,7 @@ import { useKbChildrenStatus } from "@/lib/api/knowledgeBaseChildrenList";
 import { useAppStore } from "@/lib/hooks/useAppStore";
 
 type VirtualizedChildrenProps = {
+  display: boolean;
   depth: number;
   connId: string;
   folderId: string;
@@ -17,21 +18,13 @@ type VirtualizedChildrenProps = {
 };
 
 export const VirtualizedChildren = (props: VirtualizedChildrenProps) => {
-  const { depth, connId, folderId, folderPath } = props;
-
-  // const { items, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-  //   useChildrenListing({
-  //     connId,
-  //     resourceId: folderId,
-  //     resourcePath: folderPath,
-  //   });
+  const { display, depth, connId, folderId, folderPath } = props;
 
   const kbId = useAppStore((state) => state.knowledgeBaseId);
 
   const {
     data: resources = [],
     isLoading,
-    error: connError,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
@@ -41,7 +34,7 @@ export const VirtualizedChildren = (props: VirtualizedChildrenProps) => {
     limit: NODES_PER_PAGE,
   });
 
-  const { data: resourceStatus, error: kbError } = useKbChildrenStatus({
+  const { data: resourceStatus } = useKbChildrenStatus({
     kbId,
     resourcePath: folderPath,
   });
@@ -77,7 +70,7 @@ export const VirtualizedChildren = (props: VirtualizedChildrenProps) => {
     virtualItems,
   ]);
 
-  return (
+  return display ? (
     <div className={"h-full"}>
       {isLoading ? (
         <NodeSkeleton depth={depth + 1} rows={NODES_PER_PAGE} />
@@ -120,5 +113,5 @@ export const VirtualizedChildren = (props: VirtualizedChildrenProps) => {
         })
       )}
     </div>
-  );
+  ) : null;
 };
