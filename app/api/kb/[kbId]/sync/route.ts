@@ -3,14 +3,14 @@ import { stackAiFetch } from "@/lib/helpers/stackAiFetch";
 
 export async function POST(
   req: Request,
-  { params }: { params: { kbId: string } },
+  context: { params: Promise<{ kbId: string }> },
 ) {
+  const params = await context.params;
   const body = await req.json();
 
   const res = await stackAiFetch(
     `/knowledge_bases/sync/trigger/${params.kbId}/${body.orgId}`,
   );
-
 
   const text = await res.text();
 

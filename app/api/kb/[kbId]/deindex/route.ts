@@ -3,8 +3,9 @@ import { stackAiFetch } from "@/lib/helpers/stackAiFetch";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { kbId: string } },
+  context: { params: Promise<{ kbId: string }> },
 ) {
+  const params = await context.params;
   const resourcePath = req.nextUrl.searchParams.get("resource_path") ?? "/";
 
   if (!resourcePath) {
@@ -16,7 +17,7 @@ export async function DELETE(
 
   const res = await stackAiFetch(
     `/knowledge_bases/${params.kbId}/resources?resource_path=${encodeURIComponent(resourcePath)}`,
-    { method: "DELETE" },
+    { method: "DELETE", body: JSON.stringify({ resource_path: resourcePath }) },
   );
 
   const text = await res.text();

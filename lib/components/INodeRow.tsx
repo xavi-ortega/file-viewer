@@ -23,7 +23,7 @@ export const INodeRow = (props: INodeRowProps) => {
     depth,
     isFolder,
     name,
-    status,
+    status = isFolder ? undefined : ItemStatus.NOT_INDEXED,
     expanded,
     onToggle,
     isRoot,
@@ -44,7 +44,7 @@ export const INodeRow = (props: INodeRowProps) => {
   };
 
   return (
-    <div className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 border-b px-3 py-2 hover:bg-muted/50">
+    <div className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 border-b px-3 py-2 hover:bg-muted/50 last:b-0">
       <Checkbox checked={checked} onCheckedChange={handleCheckedChange} />
 
       <button

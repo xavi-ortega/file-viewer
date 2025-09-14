@@ -1,29 +1,36 @@
 import { useConnChildrenListing } from "@/lib/api/connectionChildrenList";
-import { useKbChildrenListing } from "@/lib/api/knowledgeBaseChildrenList";
+import { useKbChildrenStatus } from "@/lib/api/knowledgeBaseChildrenList";
 import { ItemStatus } from "@/lib/types";
+import { NODES_PER_PAGE } from "@/lib/constants";
+import { useAppStore } from "@/lib/hooks/useAppStore";
 
 export function useChildrenListing(params: {
   connId: string;
-  kbId: string;
   resourceId?: string;
   resourcePath?: string;
 }) {
-  const { connId, kbId, resourceId, resourcePath } = params;
+  const { connId, resourceId, resourcePath } = params;
+
+  const kbId = useAppStore((state) => state.knowledgeBaseId);
 
   const {
     data: connChildren = [],
     isLoading: connLoading,
     error: connError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = useConnChildrenListing({
     connId,
     resourceId,
+    limit: NODES_PER_PAGE,
   });
 
   const {
     data: kbChildren = [],
     isLoading: kbLoading,
     error: kbError,
-  } = useKbChildrenListing({
+  } = useKbChildrenStatus({
     kbId,
     resourcePath,
   });
@@ -45,5 +52,8 @@ export function useChildrenListing(params: {
     items,
     isLoading: connLoading || kbLoading,
     error: connError || kbError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   };
 }

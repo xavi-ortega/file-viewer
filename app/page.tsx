@@ -4,13 +4,13 @@ import { getGoogleDriveConnection } from "@/lib/api/googleDriveConnection";
 import { getOrganization } from "@/lib/api/organization";
 
 export default async function Home() {
-  const [{organizationId}, { connectionId }, kbId] = await Promise.all([
+  const [{ organizationId }, { connectionId }, kbId] = await Promise.all([
     getOrganization(),
     getGoogleDriveConnection(),
     getKbId(),
   ]);
 
-  console.log({organizationId, connectionId, kbId})
+  console.log({ organizationId, connectionId, kbId });
 
   return (
     <INodeViewer

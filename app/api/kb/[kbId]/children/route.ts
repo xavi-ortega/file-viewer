@@ -3,15 +3,23 @@ import { stackAiFetch } from "@/lib/helpers/stackAiFetch";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { kbId: string } },
+  context: { params: Promise<{ kbId: string }> },
 ) {
-  const resourcePath = req.nextUrl.searchParams.get("resource_path") ?? "/";
+  const params = await context.params;
+  const search = new URLSearchParams(req.nextUrl.searchParams);
 
-  const res = await stackAiFetch(
-    `/knowledge_bases/${params.kbId}/resources/children?resource_path=${encodeURIComponent(resourcePath)}`,
-  );
+  try {
+    const res = await stackAiFetch(
+      `/knowledge_bases/${params.kbId}/resources/children?${search.toString()}`,
+    );
 
-  const json = await res.json();
+    const json = await res.json();
 
-  return NextResponse.json(json);
+    return NextResponse.json(json);
+  } catch {
+    // when the resource is not found the API throws error 500
+    return NextResponse.json({
+      data: [],
+    });
+  }
 }

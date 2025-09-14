@@ -10,7 +10,15 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
       text: "Indexed",
       cls: "bg-emerald-100 text-emerald-700",
     },
+    [ItemStatus.OPTIMISTIC_INDEXED]: {
+      text: "Indexed",
+      cls: "bg-emerald-100 text-emerald-700",
+    },
     [ItemStatus.PENDING]: {
+      text: "Indexing…",
+      cls: "bg-amber-100 text-amber-700",
+    },
+    [ItemStatus.PARSED]: {
       text: "Indexing…",
       cls: "bg-amber-100 text-amber-700",
     },

@@ -7,11 +7,12 @@ export type ConnItem = {
 };
 
 export enum ItemStatus {
+  PARSED = "parsed",
   PENDING = "pending",
   INDEXED = "indexed",
   NOT_INDEXED = "notIndexed",
 }
 
 export type KBItem = ConnItem & {
-  status?: ItemStatus.PENDING | ItemStatus.INDEXED;
+  status?: ItemStatus.PENDING | ItemStatus.INDEXED | ItemStatus.PARSED;
 };

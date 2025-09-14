@@ -3,15 +3,13 @@ import { stackAiFetch } from "@/lib/helpers/stackAiFetch";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { connectionId: string } },
+  context: { params: Promise<{ connectionId: string }> },
 ) {
-  const resourceId = req.nextUrl.searchParams.get("resource_id");
-  const searchParams = resourceId
-    ? `?resource_id=${encodeURIComponent(resourceId)}`
-    : "";
+  const params = await context.params;
+  const search = new URLSearchParams(req.nextUrl.searchParams);
 
   const res = await stackAiFetch(
-    `/connections/${params.connectionId}/resources/children${searchParams}`,
+    `/connections/${params.connectionId}/resources/children?${search.toString()}`,
   );
 
   const json = await res.json();

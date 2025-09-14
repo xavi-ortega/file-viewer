@@ -1,7 +1,6 @@
 import { getSessionToken } from "@/lib/helpers/cookies";
 
 export async function stackAiFetch(path: string, init?: RequestInit) {
-
   const token = await getSessionToken();
   const res = await fetch(`${process.env.STACK_BACKEND_URL}${path}`, {
     ...init,

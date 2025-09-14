@@ -1,4 +1,3 @@
-// lib/components/BulkActionsMenu.tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -9,29 +8,40 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, MoreHorizontal } from "lucide-react";
 import { useSelectionStore } from "@/lib/hooks/useSelectionStore";
-import { createKnowledgeBase, deindexFiles, syncKnowledgeBase } from "@/lib/api/knowledgeBase";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { syncKnowledgeBase } from "@/lib/api/syncKnowledgeBase";
+import { deindexFiles } from "@/lib/api/deindexFiles";
+import { useCreateKnowledgeBase } from "@/lib/api/createKnowledgeBase";
+import { useAppStore } from "@/lib/hooks/useAppStore";
 
 type BulkActionsMenuProps = {
   orgId: string;
   connId: string;
-  kbId?: string | null;
 };
 
-export function BulkActionsMenu({ connId, kbId, orgId }: BulkActionsMenuProps) {
+export function BulkActionsMenu({ connId, orgId }: BulkActionsMenuProps) {
   const queryClient = useQueryClient();
-  const [busy, setBusy] = useState<"index" | "deindex" | null>(null);
+  const createKnowledgeBase = useCreateKnowledgeBase();
 
-  const store = useSelectionStore()
+  const kbId = useAppStore((state) => state.knowledgeBaseId);
 
-  const excludedPaths = useMemo(() => Array.from(store.excludedPaths.values()), [store.excludedPaths]);
-  const filePathsSelected = useMemo(() => Array.from(store.selectedFiles.values()), [store.selectedFiles]);
+  const [busy, setBusy] = useState<"index" | "deindex">();
+
+  const store = useSelectionStore();
+
+  const excludedPaths = useMemo(
+    () => Array.from(store.excludedPaths.values()),
+    [store.excludedPaths],
+  );
+  const filePathsSelected = useMemo(
+    () => Array.from(store.selectedFiles.values()),
+    [store.selectedFiles],
+  );
 
   const counts = useMemo(
     () => ({
@@ -40,11 +50,15 @@ export function BulkActionsMenu({ connId, kbId, orgId }: BulkActionsMenuProps) {
       total: store.selectedFolders.size + store.selectedFiles.size,
       excludes: excludedPaths.length,
     }),
-    [excludedPaths.length, store.selectedFiles.size, store.selectedFolders.size]
+    [
+      excludedPaths.length,
+      store.selectedFiles.size,
+      store.selectedFolders.size,
+    ],
   );
 
   const disabledIndex = counts.total === 0 || !!busy;
-  const disabledDeidx = !kbId || filePathsSelected.length === 0 || !!busy;
+  const disabledDeindex = !kbId || disabledIndex;
 
   async function onIndexSelected() {
     try {
@@ -55,18 +69,22 @@ export function BulkActionsMenu({ connId, kbId, orgId }: BulkActionsMenuProps) {
         return;
       }
 
-      const res = await createKnowledgeBase(connId, connectionSourceIds);
+      const res = await createKnowledgeBase.mutateAsync({
+        connectionId: connId,
+        connectionSourceIds,
+      });
 
-      await syncKnowledgeBase(res.knowledgeBaseId, orgId).catch(() => {});
-
+      await syncKnowledgeBase(res.knowledgeBaseId, orgId);
 
       // Apply exclusions (if any)
       if (excludedPaths.length) {
-        await deindexFiles(res.knowledgeBaseId, excludedPaths).catch(() => {});
+        await deindexFiles(res.knowledgeBaseId, excludedPaths);
       }
 
+      await syncKnowledgeBase(res.knowledgeBaseId, orgId);
+
       toast.success(
-        `Indexing started${excludedPaths.length ? ` — ${excludedPaths.length} file(s) will be excluded` : ""}`
+        `Indexing started${excludedPaths.length ? ` — ${excludedPaths.length} file(s) will be excluded` : ""}`,
       );
 
       store.clearAll();
@@ -75,7 +93,7 @@ export function BulkActionsMenu({ connId, kbId, orgId }: BulkActionsMenuProps) {
     } catch (e) {
       toast.error((e as Error)?.message ?? e ?? "Failed to index selection");
     } finally {
-      setBusy(null);
+      setBusy(undefined);
     }
   }
 
@@ -99,26 +117,24 @@ export function BulkActionsMenu({ connId, kbId, orgId }: BulkActionsMenuProps) {
     } catch (e) {
       toast.error((e as Error)?.message ?? e ?? "Failed to de-index selection");
     } finally {
-      setBusy(null);
+      setBusy(undefined);
     }
   }
 
   return (
     <DropdownMenu>
-
-        <Tooltip delayDuration={1000}>
-          <TooltipTrigger>
-            <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Indexing</> : <MoreHorizontal className="h-4 w-4" />}
-            </Button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent>
-            Bulk actions
-          </TooltipContent>
-        </Tooltip>
-
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm">
+          {busy ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />{" "}
+              {busy === "index" ? "Indexing files" : "Unindexing files"}
+            </>
+          ) : (
+            <MoreHorizontal className="h-4 w-4" />
+          )}
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           {counts.total} selected
@@ -130,14 +146,11 @@ export function BulkActionsMenu({ connId, kbId, orgId }: BulkActionsMenuProps) {
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={disabledIndex}
-          onClick={onIndexSelected}
-        >
+        <DropdownMenuItem disabled={disabledIndex} onClick={onIndexSelected}>
           Start indexing
         </DropdownMenuItem>
         <DropdownMenuItem
-          disabled={disabledDeidx}
+          disabled={disabledDeindex}
           onClick={onDeindexSelected}
           title={!kbId ? "Create a KB first" : undefined}
         >
