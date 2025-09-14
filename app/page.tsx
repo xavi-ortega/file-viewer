@@ -10,8 +10,6 @@ export default async function Home() {
     getKbId(),
   ]);
 
-  console.log({ organizationId, connectionId, kbId });
-
   return (
     <INodeViewer
       title={"Google Drive Connection"}

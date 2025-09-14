@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, MoreHorizontal } from "lucide-react";
 import { useSelectionStore } from "@/lib/hooks/useSelectionStore";
 import { syncKnowledgeBase } from "@/lib/api/syncKnowledgeBase";
-import { deindexFiles } from "@/lib/api/deindexFiles";
+import { useDeindexFiles } from "@/lib/api/deindexFiles";
 import { useCreateKnowledgeBase } from "@/lib/api/createKnowledgeBase";
 import { useAppStore } from "@/lib/hooks/useAppStore";
 
@@ -27,6 +27,7 @@ type BulkActionsMenuProps = {
 export function BulkActionsMenu({ connId, orgId }: BulkActionsMenuProps) {
   const queryClient = useQueryClient();
   const createKnowledgeBase = useCreateKnowledgeBase();
+  const deindexFiles = useDeindexFiles();
 
   const kbId = useAppStore((state) => state.knowledgeBaseId);
 
@@ -78,7 +79,10 @@ export function BulkActionsMenu({ connId, orgId }: BulkActionsMenuProps) {
 
       // Apply exclusions (if any)
       if (excludedPaths.length) {
-        await deindexFiles(res.knowledgeBaseId, excludedPaths);
+        await deindexFiles.mutateAsync({
+          kbId: res.knowledgeBaseId,
+          resourcePaths: excludedPaths,
+        });
       }
 
       await syncKnowledgeBase(res.knowledgeBaseId, orgId);
@@ -107,7 +111,10 @@ export function BulkActionsMenu({ connId, orgId }: BulkActionsMenuProps) {
         return;
       }
 
-      await deindexFiles(kbId, filePathsSelected);
+      await deindexFiles.mutateAsync({
+        kbId,
+        resourcePaths: filePathsSelected,
+      });
 
       toast.success("De-indexed selected files");
 

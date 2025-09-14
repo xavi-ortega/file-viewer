@@ -1,34 +1,33 @@
-import { ItemStatus } from "@/lib/types";
+import { ItemStatus, OptimisticItemStatus } from "@/lib/types";
 
 type StatusBadgeProps = {
-  status: ItemStatus;
+  status: ItemStatus | OptimisticItemStatus;
 };
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const map: Record<ItemStatus, { text: string; cls: string }> = {
-    [ItemStatus.INDEXED]: {
-      text: "Indexed",
-      cls: "bg-emerald-100 text-emerald-700",
-    },
-    [ItemStatus.OPTIMISTIC_INDEXED]: {
-      text: "Indexed",
-      cls: "bg-emerald-100 text-emerald-700",
-    },
-    [ItemStatus.PENDING]: {
-      text: "Indexing…",
-      cls: "bg-amber-100 text-amber-700",
-    },
-    [ItemStatus.PARSED]: {
-      text: "Indexing…",
-      cls: "bg-amber-100 text-amber-700",
-    },
-    [ItemStatus.NOT_INDEXED]: {
-      text: "Not indexed",
-      cls: "bg-muted text-muted-foreground",
-    },
-  } as const;
+  let cfg = {
+    text: "Not indexed",
+    cls: "bg-muted text-muted-foreground",
+  };
 
-  const cfg = map[status] ?? map[ItemStatus.NOT_INDEXED];
+  switch (status) {
+    case ItemStatus.INDEXED:
+    case OptimisticItemStatus.INDEXED:
+      cfg = {
+        text: "Indexed",
+        cls: "bg-emerald-100 text-emerald-700",
+      };
+      break;
+    case ItemStatus.PENDING:
+    case ItemStatus.PARSED:
+    case OptimisticItemStatus.PENDING:
+      cfg = {
+        text: "Indexing…",
+        cls: "bg-amber-100 text-amber-700",
+      };
+      break;
+  }
+
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${cfg.cls}`}

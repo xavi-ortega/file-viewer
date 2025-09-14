@@ -1,14 +1,19 @@
 import { apiFetch } from "@/lib/helpers/apiFetch";
 import {
   QueryClient,
-  QueryKey,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ConnItem, ItemStatus, KBItem } from "@/lib/types";
+import {
+  ConnItem,
+  ItemStatus,
+  KBItem,
+  OptimisticItemStatus,
+} from "@/lib/types";
 import { useSelectionStore } from "@/lib/hooks/useSelectionStore";
 import { useAppStore } from "@/lib/hooks/useAppStore";
+import { isConnKey, isKbKey } from "@/lib/keys";
 
 function isChild(child: string, parent: string) {
   if (parent === "/") {
@@ -28,19 +33,6 @@ function parentFolder(path: string) {
   const i = path.lastIndexOf("/");
 
   return i <= 0 ? "/" : path.slice(0, i);
-}
-
-function isConnKey(k: QueryKey) {
-  return Array.isArray(k) && k[0] === "conn" && k[1] === "children";
-}
-
-function isKbKey(k: QueryKey, kbId: string) {
-  return (
-    Array.isArray(k) &&
-    k[0] === "kb" &&
-    k[1] === "children" &&
-    k[2]?.kbId === kbId
-  );
 }
 
 function populateKbFolderCache(
@@ -184,20 +176,30 @@ export function useCreateKnowledgeBase() {
         );
       }
 
-      const remainingPaths = Array.from(selectedFilePaths).concat(
-        alreadyIndexedResourcePaths,
-      );
-
-      for (const path of remainingPaths) {
+      for (const path of selectedFilePaths) {
         const parent = parentFolder(path);
         const queryKey = ["kb", "children", { kbId, resourcePath: parent }];
         const snapshot = queryClient.getQueryData<KBItem[]>(queryKey) ?? [];
         const resource = resourceByPath.get(path);
 
-        if (resource) {
+        if (resource && resource.inode_type !== "directory") {
           queryClient.setQueryData(queryKey, [
             ...snapshot,
-            { ...resource, status: ItemStatus.PENDING },
+            { ...resource, status: OptimisticItemStatus.PENDING },
+          ]);
+        }
+      }
+
+      for (const path of alreadyIndexedResourcePaths) {
+        const parent = parentFolder(path);
+        const queryKey = ["kb", "children", { kbId, resourcePath: parent }];
+        const snapshot = queryClient.getQueryData<KBItem[]>(queryKey) ?? [];
+        const resource = resourceByPath.get(path);
+
+        if (resource && resource.inode_type !== "directory") {
+          queryClient.setQueryData(queryKey, [
+            ...snapshot,
+            { ...resource, status: OptimisticItemStatus.INDEXED },
           ]);
         }
       }
@@ -234,10 +236,13 @@ export function useCreateKnowledgeBase() {
       });
     },
     onError: (err, _, ctx) => {
-      if (ctx?.snapshots) {
+      if (ctx) {
+        // bring back the old knowledge base
+        setKbId(ctx.kbId);
+
         queryClient.setQueriesData(
           {
-            predicate: (query) => isKbKey(query.queryKey, kbId),
+            predicate: (query) => isKbKey(query.queryKey, ctx.kbId),
           },
           [],
         );

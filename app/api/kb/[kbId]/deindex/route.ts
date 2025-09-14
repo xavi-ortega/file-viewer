@@ -6,21 +6,26 @@ export async function DELETE(
   context: { params: Promise<{ kbId: string }> },
 ) {
   const params = await context.params;
-  const resourcePath = req.nextUrl.searchParams.get("resource_path") ?? "/";
+  const body = (await req.json()) as { resourcePaths?: string[] };
 
-  if (!resourcePath) {
+  if (!body.resourcePaths) {
     return NextResponse.json(
-      { error: "Missing resource_path" },
+      { error: "Missing resource to deindex" },
       { status: 400 },
     );
   }
 
-  const res = await stackAiFetch(
-    `/knowledge_bases/${params.kbId}/resources?resource_path=${encodeURIComponent(resourcePath)}`,
-    { method: "DELETE", body: JSON.stringify({ resource_path: resourcePath }) },
+  const res = await Promise.all(
+    body.resourcePaths.map((resourcePath) =>
+      stackAiFetch(
+        `/knowledge_bases/${params.kbId}/resources?resource_path=${encodeURIComponent(resourcePath)}`,
+        {
+          method: "DELETE",
+          body: JSON.stringify({ resource_path: resourcePath }),
+        },
+      ).then((res) => res.text()),
+    ),
   );
 
-  const text = await res.text();
-
-  return NextResponse.json({ ok: true, raw: text });
+  return NextResponse.json({ ok: true, raw: JSON.stringify(res) });
 }

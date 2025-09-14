@@ -12,7 +12,7 @@ export async function stackAiFetch(path: string, init?: RequestInit) {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    console.log("Error path", path);
+
     throw new Error(text || `STACK_API_${res.status}`);
   }
 

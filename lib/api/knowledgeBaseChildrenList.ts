@@ -1,4 +1,4 @@
-import { ItemStatus, KBItem } from "@/lib/types";
+import { ItemStatus, KBItem, OptimisticItemStatus } from "@/lib/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { kbChildrenKey } from "@/lib/keys";
 import { apiFetch } from "@/lib/helpers/apiFetch";
@@ -36,21 +36,55 @@ export function useKbChildrenStatus(params: {
       const response = await listKbChildren(kbId, resourcePath);
 
       const old = queryClient.getQueryData<KBItem[]>(queryKey) ?? [];
-      const newIds = response.data.map((resource) => resource.resource_id);
+      const resourceById = new Map(
+        response.data.map((resource) => [resource.resource_id, resource]),
+      );
 
-      // if there was one cached element that was pending, keep it in case the knowledge base didn't yet sync
+      // Keep optimistic indexed resources while the knowledge base still didn't finish indexing them.
+      // This is mainly used for the resources indexing flow. When a knowledge base already exists and the
+      // user wants to index more resources, a new knowledge base is created keeping the old resources.
+      const optimisticIndexedResources = old.filter(
+        (node) =>
+          node.status === OptimisticItemStatus.INDEXED &&
+          resourceById.get(node.resource_id)?.status !== ItemStatus.INDEXED,
+      );
+
+      // Keep optimistic indexed resources while the knowledge base still didn't process them.
+      // This is mainly used for the resources indexing flow.
+      const optimisticPendingResources = old.filter(
+        (node) =>
+          node.status === OptimisticItemStatus.PENDING &&
+          !resourceById.has(node.resource_id),
+      );
+
+      // Keep optimistic unindexed resources while the knowledge base still didn't delete them.
+      // This is mainly used for the resources unindexing flow.
+      const optimisticUnindexedResources = old.filter(
+        (node) =>
+          node.status === OptimisticItemStatus.UNINDEXED &&
+          resourceById.has(node.resource_id),
+      );
+
+      // Remove fresh data in favor of optimistic data in some cases
+      const idsToRemove = optimisticIndexedResources
+        .map((resource) => resource.resource_id)
+        .concat(
+          optimisticUnindexedResources.map((resource) => resource.resource_id),
+        );
+
+      for (const id of idsToRemove) {
+        resourceById.delete(id);
+      }
+
       return [
-        ...old.filter(
-          (node) =>
-            (node.status === ItemStatus.PENDING ||
-              node.status === ItemStatus.OPTIMISTIC_INDEXED) &&
-            !newIds.includes(node.resource_id),
-        ),
-        ...response.data,
+        ...resourceById.values(),
+        ...optimisticIndexedResources,
+        ...optimisticPendingResources,
+        ...optimisticUnindexedResources,
       ];
     },
     select: (nodes) => {
-      const byId = new Map<string, ItemStatus>();
+      const byId = new Map<string, ItemStatus | OptimisticItemStatus>();
 
       for (const node of nodes) {
         if (node.status) {
@@ -61,6 +95,6 @@ export function useKbChildrenStatus(params: {
       return byId;
     },
     enabled: Boolean(kbId),
-    refetchInterval: 1000,
+    refetchInterval: 3000,
   });
 }

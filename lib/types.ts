@@ -10,9 +10,15 @@ export enum ItemStatus {
   PARSED = "parsed",
   PENDING = "pending",
   INDEXED = "indexed",
-  NOT_INDEXED = "notIndexed",
+  UNINDEXED = "unindexed",
+}
+
+export enum OptimisticItemStatus {
+  INDEXED = "optimisticIndexed",
+  PENDING = "optimisticPending",
+  UNINDEXED = "optimisticUnindexed",
 }
 
 export type KBItem = ConnItem & {
-  status?: ItemStatus.PENDING | ItemStatus.INDEXED | ItemStatus.PARSED;
+  status?: ItemStatus | OptimisticItemStatus;
 };

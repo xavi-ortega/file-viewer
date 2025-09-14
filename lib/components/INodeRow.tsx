@@ -23,7 +23,7 @@ export const INodeRow = (props: INodeRowProps) => {
     depth,
     isFolder,
     name,
-    status = isFolder ? undefined : ItemStatus.NOT_INDEXED,
+    status = isFolder ? undefined : ItemStatus.UNINDEXED,
     expanded,
     onToggle,
     isRoot,
