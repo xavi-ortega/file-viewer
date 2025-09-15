@@ -24,7 +24,7 @@ export async function getSessionToken() {
   return token;
 }
 
-async function setSessionToken(token: string) {
+export async function setSessionToken(token: string) {
   await setCookie("stack_session", token);
 }
 

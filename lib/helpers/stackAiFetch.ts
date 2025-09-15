@@ -1,4 +1,5 @@
-import { getSessionToken } from "@/lib/helpers/cookies";
+import { getSessionToken, setSessionToken } from "@/lib/helpers/cookies";
+import { login } from "@/lib/api/login";
 
 export async function stackAiFetch(path: string, init?: RequestInit) {
   const token = await getSessionToken();
@@ -11,9 +12,17 @@ export async function stackAiFetch(path: string, init?: RequestInit) {
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
+    const json = await res.json().catch(() => "");
 
-    throw new Error(text || `STACK_API_${res.status}`);
+    if (json.detail === "Not authenticated") {
+      const { token } = await login();
+
+      await setSessionToken(token);
+
+      return stackAiFetch(path, init);
+    } else {
+      throw new Error(json || `STACK_API_${res.status}`);
+    }
   }
 
   return res;
