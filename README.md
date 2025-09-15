@@ -78,3 +78,7 @@ DEMO_PASSWORD=...   # from the exercise
 npm i
 npm dev
 ```
+
+## Future improvements
+* Filter, sort and search controls
+* Fine grained error handling
