@@ -64,11 +64,12 @@ export function BulkActionsMenu({ connId, orgId }: BulkActionsMenuProps) {
   async function onIndexSelected() {
     try {
       setBusy("index");
+
+      toast.success(
+        `Indexing started${excludedPaths.length ? ` — ${excludedPaths.length} file(s) will be excluded` : ""}`,
+      );
+
       const connectionSourceIds = store.getAllNodes();
-      if (connectionSourceIds.length === 0) {
-        toast.info("Nothing selected to index");
-        return;
-      }
 
       const res = await createKnowledgeBase.mutateAsync({
         connectionId: connId,
@@ -87,10 +88,6 @@ export function BulkActionsMenu({ connId, orgId }: BulkActionsMenuProps) {
 
       await syncKnowledgeBase(res.knowledgeBaseId, orgId);
 
-      toast.success(
-        `Indexing started${excludedPaths.length ? ` — ${excludedPaths.length} file(s) will be excluded` : ""}`,
-      );
-
       store.clearAll();
 
       await queryClient.invalidateQueries({ queryKey: ["kb"] });
@@ -106,17 +103,12 @@ export function BulkActionsMenu({ connId, orgId }: BulkActionsMenuProps) {
     try {
       setBusy("deindex");
 
-      if (filePathsSelected.length === 0) {
-        toast.info("Select files to de-index");
-        return;
-      }
+      toast.success("De-indexed selected files");
 
       await deindexFiles.mutateAsync({
         kbId,
         resourcePaths: filePathsSelected,
       });
-
-      toast.success("De-indexed selected files");
 
       store.clearAll();
 
